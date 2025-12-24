@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Y-Safety — Sensor Simulation</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  background: #fdecef;
+  padding: 20px;
+  color: #222;
+  margin: 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 28px;
+  max-width: 1000px;
+}
+
+.logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+}
+
+.subtitle {
+  color: #666;
+  font-size: 14px;
+}
+
+.container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  max-width: 1000px;
+}
+
+@media (max-width: 768px) {
+  .container {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  background: white;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.1);
+}
+
+label {
+  display: block;
+  margin-top: 12px;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+input, select {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  border-radius: 10px;
+  border: 1px solid #e7cde0;
+  font-size: 16px;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: #c084fc;
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+button {
+  flex: 1;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: transform 0.1s;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+.btn-primary {
+  background: #c084fc;
+}
+
+.btn-secondary {
+  background: #64748b;
+}
+
+.status {
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.normal { color: #15803d; }
+.alert { color: #dc2626; }
+
+.score {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #555;
+}
+
+.notice {
+  margin-top: 12px;
+  padding: 10px;
+  font-size: 13px;
+  color: #7c3aed;
+  background: #f3e8ff;
+  border-radius: 8px;
+}
+
+ul {
+  margin: 10px 0;
+  padding-left: 20px;
+}
+
+li {
+  margin-bottom: 4px;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 28px;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 380px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.modal-content h3 {
+  margin-top: 0;
+  color: #dc2626;
+  font-size: 24px;
+}
+
+.countdown {
+  margin-top: 16px;
+  font-weight: 800;
+  font-size: 18px;
+  color: #dc2626;
+}
+
+.modal-buttons {
+  margin-top: 20px;
+}
+
+.btn-cancel {
+  background: #15803d;
+  width: 100%;
+}
+
+.input-hint {
+  font-size: 12px;
+  color: #666;
+  margin-top: 2px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <img src="logo.png" class="logo" alt="Y-Safety logo">
+  <div>
+    <h1 style="margin:0;">Y-Safety</h1>
+    <div class="subtitle">Autonomous Safety Sensor Simulation</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="card">
+    <h2>Simulated Sensor Input</h2>
+
+    <label>Heart Rate (bpm)</label>
+    <input id="hr" type="number" value="84">
+    <div class="input-hint">Normal: 60-100 bpm</div>
+
+    <label>Body Temperature (°C)</label>
+    <input id="temp" type="number" step="0.1" value="37.0">
+    <div class="input-hint">Normal: 36.5-37.5°C</div>
+
+    <label>Motion Intensity (0–10)</label>
+    <input id="motion" type="number" min="0" max="10" value="2">
+    <div class="input-hint">0=Still, 10=Running</div>
+
+    <label>Time of Day (0–23)</label>
+    <input id="time" type="number" min="0" max="23" value="14">
+    <div class="input-hint">Hour in 24h format</div>
+
+    <label>User Alone?</label>
+    <select id="alone">
+      <option value="no">No</option>
+      <option value="yes">Yes</option>
+    </select>
+
+    <div class="button-group">
+      <button class="btn-primary" id="evalBtn">Detect & Evaluate</button>
+      <button class="btn-secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="notice">
+      This is a simulation for demonstration purposes. In the production version, all sensor data will be automatically detected and transmitted in real-time without manual input.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>System Evaluation</h2>
+    <div id="status" class="status normal">AWAITING DATA</div>
+    <div id="score" class="score">Risk Score: — / 100</div>
+    <ul id="reasons">
+      <li>Click "Detect & Evaluate" to begin</li>
+    </ul>
+  </div>
+
+</div>
+
+<div class="modal" id="alertModal">
+  <div class="modal-content">
+    <h3>⚠️ Safety Alert</h3>
+    <p id="alertText">Unsafe condition detected. Emergency services will be contacted.</p>
+    <div id="countdown" class="countdown"></div>
+    <div class="modal-buttons">
+      <button class="btn-cancel" id="cancelBtn">I'm Safe - Cancel Alert</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let timer = null;
+let secondsLeft = 10;
+
+document.getElementById('evalBtn').addEventListener('click', function() {
+  console.log('Button clicked!');
+  evaluate();
+});
+
+document.getElementById('resetBtn').addEventListener('click', function() {
+  reset();
+});
+
+document.getElementById('cancelBtn').addEventListener('click', function() {
+  cancelAlert();
+});
+
+function evaluate() {
+  let score = 0;
+  let reasons = [];
+
+  const hr = parseInt(document.getElementById('hr').value) || 0;
+  const temp = parseFloat(document.getElementById('temp').value) || 0;
+  const motion = parseInt(document.getElementById('motion').value) || 0;
+  const time = parseInt(document.getElementById('time').value) || 0;
+  const alone = document.getElementById('alone').value;
+
+  console.log('Values:', {hr, temp, motion, time, alone});
+
+  if (hr > 120 || hr < 45) {
+    score += 30;
+    reasons.push('Abnormal heart rate: ' + hr + ' bpm');
+  }
+
+  if (temp > 38 || temp < 35) {
+    score += 25;
+    reasons.push('Abnormal temperature: ' + temp + '°C');
+  }
+
+  if (motion > 7) {
+    score += 15;
+    reasons.push('High motion intensity: ' + motion + '/10');
+  }
+
+  if (time < 5 || time > 22) {
+    score += 10;
+    reasons.push('Unusual time: ' + time + ':00');
+  }
+
+  if (alone === 'yes') {
+    score += 20;
+    reasons.push('User is alone');
+  }
+
+  console.log('Score:', score);
+
+  document.getElementById('score').textContent = 'Risk Score: ' + score + ' / 100';
+
+  const list = document.getElementById('reasons');
+  list.innerHTML = '';
+  
+  if (reasons.length === 0) {
+    const li = document.createElement('li');
+    li.textContent = 'All parameters normal ✓';
+    list.appendChild(li);
+  } else {
+    reasons.forEach(function(r) {
+      const li = document.createElement('li');
+      li.textContent = r;
+      list.appendChild(li);
+    });
+  }
+
+  if (score >= 30) {
+    document.getElementById('status').textContent = '⚠️ ALERT';
+    document.getElementById('status').className = 'status alert';
+    startEscalation();
+  } else {
+    document.getElementById('status').textContent = '✓ NORMAL';
+    document.getElementById('status').className = 'status normal';
+    stopEscalation();
+  }
+}
+
+function startEscalation() {
+  if (timer) clearInterval(timer);
+  secondsLeft = 10;
+  document.getElementById('alertModal').style.display = 'flex';
+  updateCountdown();
+
+  timer = setInterval(function() {
+    secondsLeft--;
+    updateCountdown();
+    if (secondsLeft <= 0) {
+      clearInterval(timer);
+      timer = null;
+      document.getElementById('alertText').textContent = 'Emergency response activated (simulated).';
+      document.getElementById('countdown').textContent = '✓ Emergency services contacted';
+      document.getElementById('countdown').style.color = '#15803d';
+    }
+  }, 1000);
+}
+
+function stopEscalation() {
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+  }
+  document.getElementById('alertModal').style.display = 'none';
+}
+
+function cancelAlert() {
+  stopEscalation();
+  document.getElementById('status').textContent = '✓ NORMAL';
+  document.getElementById('status').className = 'status normal';
+}
+
+function updateCountdown() {
+  document.getElementById('countdown').textContent = 'Escalating in ' + secondsLeft + ' seconds...';
+  document.getElementById('countdown').style.color = '#dc2626';
+}
+
+function reset() {
+  document.getElementById('hr').value = 75;
+  document.getElementById('temp').value = 37.0;
+  document.getElementById('motion').value = 2;
+  document.getElementById('time').value = 14;
+  document.getElementById('alone').value = 'no';
+  
+  document.getElementById('status').textContent = 'AWAITING DATA';
+  document.getElementById('status').className = 'status normal';
+  document.getElementById('score').textContent = 'Risk Score: — / 100';
+  document.getElementById('reasons').innerHTML = '<li>Click "Detect & Evaluate" to begin</li>';
+  
+  stopEscalation();
+}
+</script>
+
+</body>
+</html>
